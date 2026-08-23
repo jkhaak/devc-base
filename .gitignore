@@ -5,3 +5,4 @@
 !LICENCE
 !entrypoint.base.sh
 !entrypoint.sh
+!justfile
