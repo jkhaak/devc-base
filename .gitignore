@@ -1,0 +1,7 @@
+*
+
+!.gitignore
+!Containerfile
+!LICENCE
+!entrypoint.base.sh
+!entrypoint.sh
