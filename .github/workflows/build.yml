@@ -1,0 +1,111 @@
+name: Build and Push
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ghcr.io/jkhaak/devc-base
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-slim
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actior }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate date tag
+        id: date_tag
+        run: |
+          DATE=$(date -u +%Y%m%d)
+          echo "date=${DATE}" >> $GITHUB_OUTPUT
+
+          # Query ghcr.io for existing tags matching today's date
+          RESPONSE=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://ghcr.io/v2/jkhaak/devc-base/tags/list")
+
+          # Find highest patch number for today, increment by 1
+          PATCH=$(echo "$RESPONSE" | \
+            jq -r --arg date "$DATE" \
+            '[.tags // [] | .[] | select(startswith($date)) |
+            split(".")[1] | tonumber] | max // -1 | . + 1')
+
+          echo "tag=${DATE}.${PATCH}" >> $GITHUB_OUTPUT
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@902fa8ec7d6ecbea8a61083de8e5996b8a0ffe46 # v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ steps.date_tag.outputs.tag }}
+            type=sha,prefix=sha-
+
+      - name: Build image
+        id: build
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
+        with:
+          context: .
+          file: Containerfile
+          push: false
+          load: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Scan image with Grype
+        uses: anchore/scan-action@2c901ab7378dcd2bcd9c8a10ebe89a0e1df80928 # v4
+        id: grype
+        with:
+          image: ${{ env.IMAGE_NAME }}:latest
+          fail-build: false
+          severity-cutoff: critical
+          output-format: sarif
+
+      - name: Upload Grype SARIF report
+        uses: github/codeql-action/upload-sarif@ce28f5bb42b7a9f2c824e633a3f6ee835bab6858 # v3
+        with:
+          sarif_file: ${{ steps.grype.outputs.sarif }}
+
+      - name: Generate SBOM with Syft
+        uses: anchore/sbom-action@e11c554f704a0b820cbf8c51673f6945e0731532 # v0
+        with:
+          image: ${{ env.IMAGE_NAME }}:latest
+          artifact-name: sbom-devc-base.spdx.json
+          output-file: sbom-devc-base.spdx.json
+          format: spdx-json
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sbom-devc-base
+          path: sbom-devc-base.spdx.json
+          retention-days: 90
+
+      - name: Push image
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
+        with:
+          context: .
+          file: Containerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+

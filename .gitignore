@@ -6,3 +6,8 @@
 !entrypoint.base.sh
 !entrypoint.sh
 !justfile
+
+!.github/
+!.github/dependabot.yml
+!.github/workflows/
+!.github/workflows/build.yml
