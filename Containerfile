@@ -4,7 +4,8 @@ LABEL org.opencontainers.image.source="https://github.com/jkhaak/devc-base"
 LABEL org.opencontainers.image.description="Base layer for devcontainer development"
 
 # Install common system packages
-RUN dnf install -y \
+RUN dnf update -y && \
+    dnf install -y \
     ca-certificates \
     curl \
     file \
