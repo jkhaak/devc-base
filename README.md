@@ -38,4 +38,4 @@ execution order.
 
 ## LICENCE
 
-EUPL-1.2
+Copyright Jani Haakana, 2026, licenced under the EUPL.
