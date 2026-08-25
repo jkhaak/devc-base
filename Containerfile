@@ -13,7 +13,6 @@ RUN dnf update -y && \
     git \
     jq \
     make \
-    perl \
     procps-ng \
     sudo \
     && dnf clean all
