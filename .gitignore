@@ -3,6 +3,7 @@
 !.gitignore
 !Containerfile
 !LICENCE
+!README.md
 !entrypoint.base.sh
 !entrypoint.sh
 !justfile
