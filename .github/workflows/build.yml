@@ -94,11 +94,25 @@ jobs:
           tags: ${{ env.IMAGE_NAME }}:latest-${{ matrix.platform }}
           platforms: linux/${{ matrix.platform }}
 
-      - name: Scan image with Grype
-        uses: anchore/scan-action@27805bf3b4e84b4a5c980df22ed233c00390a439 # v7.4.2
-        id: grype
+      - name: Generate SBOM with Syft
+        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+        env:
+          TMPDIR: /mnt/anchore-tmp
+          SYFT_CACHE_DIR: /mnt/anchore-cache/syft
         with:
           image: ${{ env.IMAGE_NAME }}:latest-${{ matrix.platform }}
+          artifact-name: sbom-devc-${{ matrix.platform }}.spdx.json
+          output-file: sbom-devc-${{ matrix.platform }}.spdx.json
+          format: spdx-json
+
+      - name: Scan SBOM with Grype
+        uses: anchore/scan-action@27805bf3b4e84b4a5c980df22ed233c00390a439 # v7.4.2
+        id: grype
+        env:
+          TMPDIR: /mnt/anchore-tmp
+          GRYPE_DB_CACHE_DIR: /mnt/anchore-cache/grype/db
+        with:
+          sbom: sbom-devc-${{ matrix.platform }}.spdx.json
           fail-build: false
           severity-cutoff: critical
           output-format: sarif
@@ -108,19 +122,11 @@ jobs:
         with:
           sarif_file: ${{ steps.grype.outputs.sarif }}
 
-      - name: Generate SBOM with Syft
-        uses: anchore/sbom-action@aa80c8c5bd439a416a62804f2151ab38c671a638 # v0.24.1
-        with:
-          image: ${{ env.IMAGE_NAME }}:latest-${{ matrix.platform }}
-          artifact-name: sbom-devc-base-${{ matrix.platform }}.spdx.json
-          output-file: sbom-devc-base-${{ matrix.platform }}.spdx.json
-          format: spdx-json
-
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: sbom-devc-base-${{ matrix.platform }}
-          path: sbom-devc-base-${{ matrix.platform }}.spdx.json
+          name: sbom-devc-${{ matrix.platform }}
+          path: sbom-devc-${{ matrix.platform }}.spdx.json
           retention-days: 90
 
   merge-manifest:
