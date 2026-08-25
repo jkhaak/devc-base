@@ -37,9 +37,14 @@ jobs:
           DATE=$(date -u +%Y%m%d)
           echo "date=${DATE}" >> $GITHUB_OUTPUT
 
+          TOKEN=$(curl -s \
+            -u "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
+            "https://ghcr.io/token?scope=repository:jkhaak/devc-base:pull&service=ghcr.io" \
+            | jq -r ".token")
+
           # Query ghcr.io for existing tags matching today's date
           RESPONSE=$(curl -s \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: Bearer ${TOKEN}" \
             "https://ghcr.io/v2/jkhaak/devc-base/tags/list")
 
           # Find highest patch number for today, increment by 1
@@ -49,12 +54,6 @@ jobs:
             split(".")[1] | tonumber] | max // -1 | . + 1')
 
           echo "tag=${DATE}.${PATCH}" >> $GITHUB_OUTPUT
-
-      - name: Debug tags
-        run: |
-          curl -s \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://ghcr.io/v2/jkhaak/devc-base/tags/list"
 
       - name: Extract metadata
         id: meta
