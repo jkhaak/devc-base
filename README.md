@@ -18,7 +18,7 @@ Homebrew, a non-root `dev` user, and a composable entrypoint system.
 just build
 ```
 
-# Reuse
+## Reuse
 
 Extend this image by referencing it in your Containerfile:
 
@@ -36,6 +36,6 @@ COPY --chown=dev:dev --chmod=755 my-setup.sh /entrypoint.d/20-my-setup.sh
 Scripts are sourced in lexicographic order, so prefix with a number to control
 execution order.
 
-# LICENCE
+## LICENCE
 
 EUPL-1.2
