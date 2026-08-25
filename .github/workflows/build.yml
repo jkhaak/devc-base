@@ -136,12 +136,10 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create and push multi-arch manifest
-        uses: docker/manifest-action@TODO # vTODO
-        with:
-          base-images: |
-            ${{ env.IMAGE_NAME }}:latest-amd64
-            ${{ env.IMAGE_NAME }}:latest-arm64
-          extra-images: |
-            ${{ env.IMAGE_NAME }}:latest
-            ${{ env.IMAGE_NAME }}:${{ needs.generate-tags.outputs.date_tag }}
-            ${{ env.IMAGE_NAME }}:${{ needs.generate-tags.outputs.sha_tag }}
+        run: |
+          docker buildx imagetools create \
+            --tag ${{ env.IMAGE_NAME }}:latest \
+            --tag ${{ env.IMAGE_NAME }}:latest-amd64 \
+            --tag ${{ env.IMAGE_NAME }}:latest-arm64 \
+            --tag ${{ env.IMAGE_NAME }}:${{ needs.generate-tags.outputs.date_tag }} \
+            --tag ${{ env.IMAGE_NAME }}:${{ needs.generate-tags.outputs.sha_tag }}
