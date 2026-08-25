@@ -4,8 +4,8 @@ LABEL org.opencontainers.image.source="https://github.com/jkhaak/devc-base"
 LABEL org.opencontainers.image.description="Base layer for devcontainer development"
 
 # Install common system packages
-RUN dnf update -y && \
-    dnf install -y \
+RUN dnf update -y --setopt=install_weak_deps=False --setopt=tsflags=nodocs && \
+    dnf install -y --setopt=install_weak_deps=False --setopt=tsflags=nodocs \
     ca-certificates \
     curl \
     file \
@@ -39,7 +39,8 @@ USER dev
 ENV PATH=/home/dev/.local/bin:$PATH
 
 # Install Homebrew
-RUN NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+RUN NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" \
+    && rm -rf /home/linuxbrew/.linuxbrew/Homebrew/.git
 
 # Make brew available for all subsequent RUN steps
 ENV HOMEBREW_PREFIX=/home/linuxbrew/.linuxbrew
