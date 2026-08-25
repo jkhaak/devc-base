@@ -50,6 +50,12 @@ jobs:
 
           echo "tag=${DATE}.${PATCH}" >> $GITHUB_OUTPUT
 
+      - name: Debug tags
+        run: |
+          curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://ghcr.io/v2/jkhaak/devc-base/tags/list"
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
