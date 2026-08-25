@@ -14,10 +14,14 @@ RUN dnf install -y \
     make \
     perl \
     procps-ng \
+    sudo \
     && dnf clean all
 
-# Create non-root user with UID 1000
-RUN useradd -m -u 1000 -s /bin/bash dev
+# Create non-root user with UID 1000, add to wheel group
+RUN useradd -m -u 1000 -s /bin/bash dev && \
+    usermod -aG wheel dev && \
+    echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel-nopasswd && \
+    chmod 0440 /etc/sudoers.d/wheel-nopasswd
 
 # Create entrypoint.d and workspace
 RUN mkdir -p /entrypoint.d && \
@@ -27,18 +31,15 @@ RUN mkdir -p /entrypoint.d && \
 
 # Copy the entrypoint script
 COPY --chown=dev:dev --chmod=755 entrypoint.sh /entrypoint.sh
-
-# Install Homebrew
-RUN NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && \
-    chown -R dev:dev /home/linuxbrew
-
-# Create the base shell environment script
 COPY --chown=dev:dev --chmod=755 entrypoint.base.sh /entrypoint.d/00-base.sh
 
 # Set default user
 USER dev
 
 ENV PATH=/home/dev/.local/bin:$PATH
+
+# Install Homebrew
+RUN NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # Make brew available for all subsequent RUN steps
 ENV HOMEBREW_PREFIX=/home/linuxbrew/.linuxbrew
