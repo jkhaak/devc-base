@@ -36,6 +36,17 @@ COPY --chown=dev:dev --chmod=755 my-setup.sh /entrypoint.d/20-my-setup.sh
 Scripts are sourced in lexicographic order, so prefix with a number to control
 execution order.
 
+## Container registry
+
+Images are published to the GitHub Container Registry and can be browsed at: https://github.com/jkhaak/devc-base/pkgs/container/devc-base
+
+Built daily for `amd64` and `arm64` architectures.
+
+Available tags:
+- `latest` — most recent build
+- `YYYmmDD.patch` — date versioned build, e.g. `20260826.0`
+- `sha-<commit>` — build tied to a specific commit
+
 ## LICENCE
 
 Copyright Jani Haakana, 2026, licenced under the EUPL.
