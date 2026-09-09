@@ -1,4 +1,4 @@
-FROM fedora:44
+FROM registry.fedoraproject.org/fedora:44
 
 LABEL org.opencontainers.image.source="https://github.com/jkhaak/devc-base"
 LABEL org.opencontainers.image.description="Base layer for devcontainer development"
